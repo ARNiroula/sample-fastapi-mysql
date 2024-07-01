@@ -10,7 +10,7 @@ class Users(Base):
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     # Email validation is done in the schema
     email: Mapped[str] = mapped_column(
-        String(100),
+        String(200),
         unique=True,
         index=True
     )

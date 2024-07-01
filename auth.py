@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta, timezone
 import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
@@ -60,3 +61,38 @@ def verify_token_access(token: str, credentials_exception) -> str:
         raise credentials_exception
 
     return user_email
+
+
+def create_reset_password_token(email: str) -> str:
+    data = {
+        "email": email,
+        "expire": str(datetime.now(UTC) + timedelta(minutes=5))
+    }
+
+    token = jwt.encode(data, settings.JWT_SECRET_KEY, settings.ALGORITHM)
+
+    return token
+
+
+def decode_reset_password_token(token: str) -> str:
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+        print(payload)
+        email = payload.get("email")
+        expire = datetime.strptime(
+            payload.get("expire"), "%Y-%m-%d %H:%M:%S.%f%z"  # type: ignore
+        ).replace(tzinfo=timezone.utc)
+
+        if expire < datetime.now(UTC):
+            print("Token Expired!")
+            raise InvalidTokenError
+
+        return email
+
+    except InvalidTokenError:
+        raise InvalidTokenError
